@@ -33,3 +33,7 @@ Para o correto funcionamento das funcionalidades acima, serão necessário o man
 * **Frontend:** HTML, Bootstrap, CSS e Flask
 * **Backend:** Python e banco de dados SQLite
 * **Documentação:** Swagger para documentar as APIs
+
+## Diagrama BD
+
+* https://www.drawdb.app/editor?shareId=78117b3e80c9cd07b123d5c4a1aba217
