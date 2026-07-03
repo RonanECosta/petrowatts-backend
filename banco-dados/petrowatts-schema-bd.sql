@@ -1,8 +1,10 @@
 CREATE TABLE IF NOT EXISTS "usuarios" (
 	"id" INTEGER NOT NULL,
-	"Nome" VARCHAR,
-	"Estado" VARCHAR,
+	"Nome" VARCHAR NOT NULL,
+	"Estado" VARCHAR NOT NULL,
+	"Cpf" VARCHAR UNIQUE NOT NULL,
 	PRIMARY KEY("id"),
+
 	FOREIGN KEY ("id") REFERENCES "usuarios_carros"("id_usuario")
 	ON UPDATE NO ACTION ON DELETE NO ACTION
 );
@@ -12,7 +14,8 @@ CREATE TABLE IF NOT EXISTS "usuarios_carros" (
 	"id_usuario" INTEGER NOT NULL,
 	"id_carro" INTEGER NOT NULL,
 	PRIMARY KEY("id"),
-	FOREIGN KEY ("id_carro") REFERENCES "carros_combustao"("id")
+	FOREIGN KEY ("id_usuario") REFERENCES "usuarios"("id"),
+    FOREIGN KEY ("id_carro") REFERENCES "carros_combustao"("id")
 	ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
