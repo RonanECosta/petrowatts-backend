@@ -41,17 +41,17 @@ dictConfig({
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "detailed",
             "filename": "log/gunicorn.error.log",
-            "maxBytes": 10000,
-            "backupCount": 10,
-            "delay": "True",
+            "maxBytes": 1048576,
+            "backupCount": 5,
+            "delay": True,
         },
         "detailed_file": {
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "detailed",
             "filename": "log/gunicorn.detailed.log",
-            "maxBytes": 10000,
-            "backupCount": 10,
-            "delay": "True",
+            "maxBytes": 1048576,
+            "backupCount": 5,
+            "delay": True,
         }
     },
     "loggers": {
