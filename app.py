@@ -3,9 +3,8 @@ from flask_openapi3.openapi import OpenAPI
 from flask_openapi3.models.info import Info
 from flask_openapi3.models.tag import Tag
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import exists
 from flask_cors import CORS
-
-# Importe os novos modelos de Fabricante e CarroEletrico do seu pacote model
 from model import Usuario, Fabricante, CarroEletrico, CarroCombustao, UsuarioCarro, Session
 from schemas import UsuarioSchema, UsuarioViewSchema, ErrorSchema
 from logger import logger
@@ -14,7 +13,6 @@ info = Info(title="Minha API - Economia de Veículos", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 CORS(app)
 
-# Definição das tags para a documentação Swagger
 home_tag = Tag(name="Documentação", description="Seleção de documentação: Swagger, Redoc ou RapiDoc")
 usuario_tag = Tag(name="Usuário", description="Adição, visualização e remoção de usuários à base")
 veiculo_eletrico_tag = Tag(name="Veículos Elétricos", description="Consultas de marcas, modelos e anos da base")
@@ -48,9 +46,9 @@ def get_todos_veiculos_combustao():
             
             ano_numerico = c.ano if c.ano is not None else 0
             lista_veiculos.append({
-                "nome": f"{nome_fabricante} {c.modelo}", # Ex: "Fiat Uno"
-                "quantidade": f"Ano {ano_numerico}",        # Ex: "Ano 2015"
-                "valor": f"R$ {c.valor_revenda:,.2f}"     # Ex: "R$ 35,000.00"
+                "nome": f"{nome_fabricante} {c.modelo}",
+                "quantidade": f"Ano {ano_numerico}",
+                "valor": f"R$ {c.valor_revenda:,.2f}"
             })
             
         return jsonify({"veiculos": lista_veiculos}), 200
@@ -67,10 +65,7 @@ def get_fabricantes():
     logger.debug("Coletando lista de fabricantes")
     session = Session()
     try:
-        # Busca todos os fabricantes ordenados por nome
         fabricantes = session.query(Fabricante).order_by(Fabricante.fabricante).all()
-        
-        # Converte o resultado para o formato JSON que o JS espera: [{id: 1, fabricante: 'Tesla'}, ...]
         resultado = [{"id": f.id, "fabricante": f.fabricante} for f in fabricantes]
         return jsonify(resultado), 200
     except Exception as e:
@@ -91,14 +86,10 @@ def get_modelos():
         
     session = Session()
     try:
-        # CORREÇÃO: Alinhado o order_by para usar CarroCombustao.modelo
         modelos = session.query(CarroCombustao.modelo)\
                          .filter(CarroCombustao.id_fabricante == id_fabricante)\
                          .distinct()\
                          .order_by(CarroCombustao.modelo).all()
-        
-        # Como o .query(CarroCombustao.modelo) retorna uma lista de tuplas de um elemento, 
-        # acessamos a posição [0] de cada linha para pegar a string pura do modelo
         resultado = [{"modelo": m[0]} for m in modelos]
         return jsonify(resultado), 200
     except Exception as e:
@@ -134,8 +125,7 @@ def get_anos():
     finally:
         session.close()
 
-@app.post('/usuario', tags=[usuario_tag],
-          responses={"200": UsuarioViewSchema, "409": ErrorSchema, "400": ErrorSchema})
+@app.post('/usuario', tags=[usuario_tag], responses={"200": UsuarioViewSchema, "409": ErrorSchema, "400": ErrorSchema})
 def add_usuario(form: UsuarioSchema):
     """Adiciona um novo usuário à base de dados."""
     usuario = Usuario(
@@ -149,9 +139,7 @@ def add_usuario(form: UsuarioSchema):
         session.commit()
         logger.debug(f"Adicionado usuário de nome: '{usuario.nome}'")
         
-        # IMPORTANTE: Para evitar o erro de lazy loading do SQLAlchemy fora da sessão,
-        # convertemos o retorno para um dicionário antes de responder, se necessário.
-        return {"nome": usuario.nome, "estado": usuario.estado}, 200
+        return {"id": usuario.id, "nome": usuario.nome, "estado": usuario.estado}, 200
 
     except IntegrityError as e:
         error_msg = "Usuário de mesmo nome já salvo na base :/"
@@ -162,9 +150,42 @@ def add_usuario(form: UsuarioSchema):
         error_msg = "Não foi possível salvar novo usuário :/"
         logger.warning(f"Erro ao adicionar usuário '{usuario.nome}', {error_msg}")
         return {"message": error_msg}, 400
+    
+@app.delete('/usuario', tags=[usuario_tag])
+def delete_usuario():
+    """Exclui um usuário da base de dados pelo CPF informado."""
+    id_usuario = request.args.get('id_usuario')
+    
+    if not id_usuario:
+        return {"message": "O parâmetro 'id_usuario' é obrigatório."}, 400
+
+    logger.debug(f"Solicitação de exclusão para o usuário com ID: '{id_usuario}'")
+    
+    session = Session()
+    try:
+        # Busca o usuário pelo ID
+        usuario = session.query(Usuario).filter(Usuario.id == id_usuario).first()
+        
+        if not usuario:
+            logger.warning(f"Usuário com ID '{id_usuario}' não encontrado para exclusão.")
+            return {"message": "Usuário não encontrado."}, 404
+        
+        # Remove o usuário e seus vínculos na tabela associativa
+        session.delete(usuario)
+        session.commit()
+        
+        logger.info(f"Usuário com ID '{id_usuario}' excluído com sucesso.")
+        return {"message": "Usuário excluído com sucesso."}, 200
+
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Erro ao excluir usuário com ID '{id_usuario}': {e}")
+        return {"message": "Erro interno ao tentar excluir o usuário."}, 500
+    finally:
+        session.close()
 
 
-@app.post('/usuario-veiculo', tags=[usuario_tag])
+@app.post('/usuario-carro', tags=[usuario_tag])
 def add_usuario_veiculo():
     """
     Cadastra o usuário, localiza o carro selecionado pelos combos
@@ -173,7 +194,8 @@ def add_usuario_veiculo():
     # Captura os dados enviados via FormData ou JSON do JavaScript
     # Usando request.form para manter compatibilidade com o FormData original do seu JS
     nome_usuario = request.form.get('nome')
-    estado_usuario = request.form.get('estado')
+    estado_usuario = request.form.get('uf')
+    cpf_usuario = request.form.get('cpf')
     id_fabricante = request.form.get('id_fabricante')
     modelo_carro = request.form.get('modelo')
     ano_carro = request.form.get('ano')
@@ -190,13 +212,16 @@ def add_usuario_veiculo():
             CarroCombustao.ano == ano_carro
         ).first()
 
+        logger.info(f"Carro encontrado: {carro.modelo} ({carro.ano}) do fabricante ID {carro.id_fabricante}") if carro else logger.warning("Carro não encontrado para a combinação selecionada.")
+
         if not carro:
             return {"message": "A combinação de veículo selecionada não foi encontrada no banco de dados."}, 404
 
         # 2. Cria e adiciona o Usuário
-        novo_usuario = Usuario(nome=nome_usuario, estado=estado_usuario)
+        novo_usuario = Usuario(cpf=cpf_usuario, nome=nome_usuario, estado=estado_usuario)
         session.add(novo_usuario)
         session.flush() # O flush gera o ID do usuário sem fechar a transação do banco
+        logger.info(f"Usuário criado: {novo_usuario.nome} ({novo_usuario.cpf}) do estado {novo_usuario.estado}")
 
         # 3. Cria o vínculo na tabela associativa 'usuario_carro'
         vinculo = UsuarioCarro(
@@ -210,16 +235,152 @@ def add_usuario_veiculo():
         session.commit()
         
         logger.debug(f"Sucesso! Usuário {novo_usuario.id} vinculado ao carro {carro.id}")
-        return {"message": "Usuário e veículo vinculados com sucesso!"}, 200
+        return {
+            "message": "Usuário e veículo vinculados com sucesso!",
+            "id_usuario": novo_usuario.id
+            }, 200
 
     except IntegrityError as e:
         session.rollback()
-        error_msg = "Usuário com este mesmo nome já está salvo na base."
-        logger.warning(f"Erro de integridade para '{nome_usuario}': {error_msg}")
+        error_msg = "Usuário com este mesmo CPF já está salvo na base."
+        logger.warning(f"Erro de integridade para '{cpf_usuario}': {error_msg}")
         return {"message": error_msg}, 409
     except Exception as e:
         session.rollback()
         logger.error(f"Erro inesperado no cadastro: {e}")
         return {"message": "Não foi possível salvar o registro devido a um erro interno."}, 500
+    finally:
+        session.close()
+
+@app.get('/usuario-carro', tags=[usuario_tag])
+def get_usuario_veiculo():
+    """
+    Busca os detalhes do usuário e do veículo vinculado a ele pelo cpf.
+    """
+    cpf_usuario = request.args.get('cpf')
+    
+    if not cpf_usuario:
+        return {"message": "O parâmetro 'cpf' é obrigatório."}, 400
+
+    logger.debug(f"Buscando dados para o usuário: '{cpf_usuario}'")
+    
+    session = Session()
+    try:
+        # Busca o usuário e faz o join com a tabela associativa e o carro
+        # O .join() aqui assume que você definiu os relacionamentos nos seus modelos (model/usuario.py)
+        resultado_query = session.query(Usuario, UsuarioCarro, CarroCombustao)\
+            .join(UsuarioCarro, Usuario.id == UsuarioCarro.id_usuario)\
+            .join(CarroCombustao, UsuarioCarro.id_carro_combustao == CarroCombustao.id)\
+            .join(Fabricante, CarroCombustao.id_fabricante == Fabricante.id)\
+            .filter(Usuario.cpf == cpf_usuario)\
+            .first()
+
+        if not resultado_query:
+            return {"message": "Usuário ou vínculo não encontrado."}, 404
+
+        usuario, vinculo, carro = resultado_query
+        
+        # Monta a resposta com os dados que você salvou anteriormente
+        return {
+            "id_usuario": usuario.id,
+            "cpf": usuario.cpf,
+            "nome": usuario.nome,
+            "estado": usuario.estado,
+            "veiculo": {
+                "fabricante": carro.fabricante_ref.fabricante if carro.fabricante_ref else "Desconhecido",
+                "modelo": carro.modelo,
+                "ano": carro.ano,
+                "km_mensal": vinculo.km_mensal
+            }
+        }, 200
+
+    except Exception as e:
+        logger.error(f"Erro ao buscar dados do usuário: {e}")
+        return {"message": "Erro interno ao buscar os dados."}, 500
+    finally:
+        session.close()
+
+
+@app.get('/fabricantes_combustao', tags=[veiculo_combustao_tag])
+def get_fabricantes_combustao():
+    """Retorna fabricantes de carros `a combustão, ou sejam, que possuem pelo menos um carro a combustão cadastrado."""
+    logger.debug("Coletando lista de fabricantes com carros cadastrados")
+    session = Session()
+    try:
+        # busca, equivalente à: SELECT id, fabricante FROM fabricante f WHERE EXISTS (SELECT 1 FROM carro_combustao c WHERE c.id_fabricante = f.id);
+        fabricantesCombustao = session.query(Fabricante).filter(exists().where(CarroCombustao.id_fabricante == Fabricante.id)).order_by(Fabricante.fabricante).all()
+        
+        # Converte para o formato JSON
+        resultado = [{"id": f.id, "fabricante": f.fabricante} for f in fabricantesCombustao]
+        return jsonify(resultado), 200
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar fabricantes de carros à combustão: {e}")
+        return {"message": "Erro ao coletar dados do banco"}, 500
+    finally:
+        session.close()
+
+@app.patch('/usuario-carro', tags=[usuario_tag])
+def update_usuario_veiculo():
+    """
+    Atualiza os dados do usuário e do veículo vinculado a ele pelo cpf.
+    """
+    # Captura os dados enviados via FormData ou JSON do JavaScript
+    # Usando request.form para manter compatibilidade com o FormData original do seu JS
+    id_usuario = request.form.get('id_usuario')
+    nome_usuario = request.form.get('nome')
+    estado_usuario = request.form.get('uf')
+    cpf_usuario = request.form.get('cpf')
+    id_fabricante = request.form.get('id_fabricante')
+    modelo_carro = request.form.get('modelo')
+    ano_carro = request.form.get('ano')
+    km_mensal = request.form.get('km_mensal')
+
+    logger.debug(f"Iniciando alteração para o usuário: '{nome_usuario}'")
+    
+    session = Session()
+
+    if not id_usuario:
+        return {"message": "O parâmetro 'id_usuario' é obrigatório."}, 400
+
+    try:
+        # 1. Busca o usuário
+        usuario = session.query(Usuario).filter(Usuario.id == id_usuario).first()
+        if not usuario:
+            return {"message": "Usuário não encontrado."}, 404
+        
+        # 2. Atualiza dados do usuário
+        if nome_usuario: setattr(usuario, 'nome', nome_usuario)
+        if estado_usuario: setattr(usuario, 'estado', estado_usuario)
+        if cpf_usuario: setattr(usuario, 'cpf', cpf_usuario)
+        
+        # 3. Busca o vínculo atual
+        vinculo = session.query(UsuarioCarro).filter(UsuarioCarro.id_usuario == usuario.id).first()
+        if not vinculo:
+            return {"message": "Vínculo de veículo não encontrado."}, 404
+            
+        # 4. Se o usuário alterou o carro, precisamos buscar o novo ID do carro
+        if id_fabricante and modelo_carro and ano_carro:
+            carro = session.query(CarroCombustao).filter(
+                CarroCombustao.id_fabricante == id_fabricante,
+                CarroCombustao.modelo == modelo_carro,
+                CarroCombustao.ano == ano_carro
+            ).first()
+            
+            if carro:
+                vinculo.id_carro_combustao = carro.id
+            else:
+                return {"message": "Novo veículo selecionado não encontrado."}, 404
+
+        # 5. Atualiza km_mensal
+        if km_mensal is not None: setattr(vinculo, 'km_mensal', int(km_mensal))
+        
+        session.commit()
+        return {"message": "Dados atualizados com sucesso."}, 200
+
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Erro ao atualizar usuário ID {id_usuario}: {e}")
+        return {"message": "Erro interno ao tentar atualizar."}, 500
     finally:
         session.close()

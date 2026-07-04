@@ -6,6 +6,7 @@ from model.usuario import Usuario
 class UsuarioSchema(BaseModel):
     """ Define como um novo usuário a ser inserido deve ser representado
     """
+    cpf: str = "12345678900"
     nome: str = "João"
     estado: str = "RJ"
 
@@ -13,6 +14,7 @@ class UsuarioViewSchema(BaseModel):
     """ Define como um usuário será retornado.
     """
     id: int = 1
+    cpf: str = "12345678900"
     nome: str = "João"
     estado: str = "RJ"
 
@@ -24,6 +26,7 @@ def apresenta_usuarios(usuarios: List[Usuario]):
     for usuario in usuarios:
         result.append({
             "id": usuario.id,
+            "cpf": usuario.cpf,
             "nome": usuario.nome,
             "estado": usuario.estado,
         })

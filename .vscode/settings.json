@@ -1,3 +1,11 @@
 {
-  "markdown.mermaid.enabled": true
+    "markdown.mermaid.enabled": true,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingTypeStubs": "none",
+        "reportUnknownVariableType": "none",
+        "reportOptionalSubscript": "none",
+        "reportOptionalMemberAccess": "none",
+        "reportOptionalCall": "none",
+        
+    }
 }
