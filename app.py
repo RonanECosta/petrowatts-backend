@@ -35,12 +35,10 @@ def get_todos_veiculos_combustao():
     logger.debug("Coletando lista de carros a combustão da base técnica")
     session = Session()
     try:
-        # Busca os carros cadastrados
         carros = session.query(CarroCombustao).all()
         
         lista_veiculos = []
         for c in carros:
-            # Acessa o relacionamento para obter o nome do fabricante
             fabricante = c.fabricante_ref
             nome_fabricante = fabricante.fabricante if fabricante else "Desconhecido"
             
@@ -110,13 +108,11 @@ def get_anos():
         
     session = Session()
     try:
-        # Busca os anos cadastrados para aquele modelo específico
         anos = session.query(CarroCombustao.ano)\
                       .filter(CarroCombustao.modelo == modelo_selecionado)\
                       .distinct()\
                       .order_by(CarroCombustao.ano.desc()).all()
         
-        # Retorna no formato esperado pelo JS: [{ano: 2023}, {ano: 2024}]
         resultado = [{"ano": int(float(a.ano))} for a in anos]
         return jsonify(resultado), 200
     except Exception as e:
@@ -163,14 +159,12 @@ def delete_usuario():
     
     session = Session()
     try:
-        # Busca o usuário pelo ID
         usuario = session.query(Usuario).filter(Usuario.id == id_usuario).first()
         
         if not usuario:
             logger.warning(f"Usuário com ID '{id_usuario}' não encontrado para exclusão.")
             return {"message": "Usuário não encontrado."}, 404
         
-        # Remove o usuário e seus vínculos na tabela associativa
         session.delete(usuario)
         session.commit()
         
@@ -191,8 +185,6 @@ def add_usuario_veiculo():
     Cadastra o usuário, localiza o carro selecionado pelos combos
     e vincula ambos na tabela associativa salvando a rodagem mensal.
     """
-    # Captura os dados enviados via FormData ou JSON do JavaScript
-    # Usando request.form para manter compatibilidade com o FormData original do seu JS
     nome_usuario = request.form.get('nome')
     estado_usuario = request.form.get('uf')
     cpf_usuario = request.form.get('cpf')
@@ -205,7 +197,6 @@ def add_usuario_veiculo():
     
     session = Session()
     try:
-        # 1. Encontra o ID do Carro correspondente à combinação selecionada nos combos
         carro = session.query(CarroCombustao).filter(
             CarroCombustao.id_fabricante == id_fabricante,
             CarroCombustao.modelo == modelo_carro,
@@ -217,13 +208,11 @@ def add_usuario_veiculo():
         if not carro:
             return {"message": "A combinação de veículo selecionada não foi encontrada no banco de dados."}, 404
 
-        # 2. Cria e adiciona o Usuário
         novo_usuario = Usuario(cpf=cpf_usuario, nome=nome_usuario, estado=estado_usuario)
         session.add(novo_usuario)
         session.flush() # O flush gera o ID do usuário sem fechar a transação do banco
         logger.info(f"Usuário criado: {novo_usuario.nome} ({novo_usuario.cpf}) do estado {novo_usuario.estado}")
 
-        # 3. Cria o vínculo na tabela associativa 'usuario_carro'
         vinculo = UsuarioCarro(
             id_usuario=novo_usuario.id,
             id_carro_combustao=carro.id,
@@ -231,7 +220,6 @@ def add_usuario_veiculo():
         )
         session.add(vinculo)
         
-        # Efetiva todas as operações juntas no banco de dados
         session.commit()
         
         logger.debug(f"Sucesso! Usuário {novo_usuario.id} vinculado ao carro {carro.id}")
@@ -266,8 +254,6 @@ def get_usuario_veiculo():
     
     session = Session()
     try:
-        # Busca o usuário e faz o join com a tabela associativa e o carro
-        # O .join() aqui assume que você definiu os relacionamentos nos seus modelos (model/usuario.py)
         resultado_query = session.query(Usuario, UsuarioCarro, CarroCombustao)\
             .join(UsuarioCarro, Usuario.id == UsuarioCarro.id_usuario)\
             .join(CarroCombustao, UsuarioCarro.id_carro_combustao == CarroCombustao.id)\
@@ -280,7 +266,6 @@ def get_usuario_veiculo():
 
         usuario, vinculo, carro = resultado_query
         
-        # Monta a resposta com os dados que você salvou anteriormente
         return {
             "id_usuario": usuario.id,
             "cpf": usuario.cpf,
@@ -307,10 +292,8 @@ def get_fabricantes_combustao():
     logger.debug("Coletando lista de fabricantes com carros cadastrados")
     session = Session()
     try:
-        # busca, equivalente à: SELECT id, fabricante FROM fabricante f WHERE EXISTS (SELECT 1 FROM carro_combustao c WHERE c.id_fabricante = f.id);
         fabricantesCombustao = session.query(Fabricante).filter(exists().where(CarroCombustao.id_fabricante == Fabricante.id)).order_by(Fabricante.fabricante).all()
         
-        # Converte para o formato JSON
         resultado = [{"id": f.id, "fabricante": f.fabricante} for f in fabricantesCombustao]
         return jsonify(resultado), 200
         
@@ -325,8 +308,6 @@ def update_usuario_veiculo():
     """
     Atualiza os dados do usuário e do veículo vinculado a ele pelo cpf.
     """
-    # Captura os dados enviados via FormData ou JSON do JavaScript
-    # Usando request.form para manter compatibilidade com o FormData original do seu JS
     id_usuario = request.form.get('id_usuario')
     nome_usuario = request.form.get('nome')
     estado_usuario = request.form.get('uf')
@@ -344,22 +325,18 @@ def update_usuario_veiculo():
         return {"message": "O parâmetro 'id_usuario' é obrigatório."}, 400
 
     try:
-        # 1. Busca o usuário
         usuario = session.query(Usuario).filter(Usuario.id == id_usuario).first()
         if not usuario:
             return {"message": "Usuário não encontrado."}, 404
         
-        # 2. Atualiza dados do usuário
         if nome_usuario: setattr(usuario, 'nome', nome_usuario)
         if estado_usuario: setattr(usuario, 'estado', estado_usuario)
         if cpf_usuario: setattr(usuario, 'cpf', cpf_usuario)
         
-        # 3. Busca o vínculo atual
         vinculo = session.query(UsuarioCarro).filter(UsuarioCarro.id_usuario == usuario.id).first()
         if not vinculo:
             return {"message": "Vínculo de veículo não encontrado."}, 404
             
-        # 4. Se o usuário alterou o carro, precisamos buscar o novo ID do carro
         if id_fabricante and modelo_carro and ano_carro:
             carro = session.query(CarroCombustao).filter(
                 CarroCombustao.id_fabricante == id_fabricante,
@@ -372,7 +349,6 @@ def update_usuario_veiculo():
             else:
                 return {"message": "Novo veículo selecionado não encontrado."}, 404
 
-        # 5. Atualiza km_mensal
         if km_mensal is not None: setattr(vinculo, 'km_mensal', int(km_mensal))
         
         session.commit()
