@@ -9,7 +9,7 @@ from model import Usuario, Fabricante, CarroEletrico, CarroCombustao, UsuarioCar
 from schemas import UsuarioSchema, UsuarioViewSchema, ErrorSchema
 from logger import logger
 
-info = Info(title="Minha API - Economia de Veículos", version="1.0.0")
+info = Info(title="Petrowatts - comparador veículos à combustão x elétricos", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 CORS(app)
 
@@ -20,18 +20,16 @@ veiculo_combustao_tag = Tag(name="Veículos a Combustão", description="Consulta
 
 @app.get('/', tags=[home_tag])
 def home():
-    """Redireciona para /openapi, tela que permite a escolha do estilo de documentação."""
-    return redirect('/openapi')
-
+    """Redireciona para documentação Swagger."""
+    return redirect('/openapi/swagger')
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory('static', 'favicon.ico', mimetype='image/x-icon')
 
-
 @app.get('/veiculo-combustao', tags=[veiculo_combustao_tag])
 def get_todos_veiculos_combustao():
-    """Busca todos os carros a combustão da base para renderizar na tabela do frontend."""
+    """Busca todos os carros a combustão."""
     logger.debug("Coletando lista de carros a combustão da base técnica")
     session = Session()
     try:
@@ -54,21 +52,6 @@ def get_todos_veiculos_combustao():
     except Exception as e:
         logger.error(f"Erro ao listar veículos a combustão: {e}")
         return {"message": "Erro ao coletar dados do banco"}, 500
-    finally:
-        session.close()
-
-@app.get('/fabricantes', tags=[veiculo_combustao_tag])
-def get_fabricantes():
-    """Busca todos os fabricantes cadastrados no banco para o primeiro combo box."""
-    logger.debug("Coletando lista de fabricantes")
-    session = Session()
-    try:
-        fabricantes = session.query(Fabricante).order_by(Fabricante.fabricante).all()
-        resultado = [{"id": f.id, "fabricante": f.fabricante} for f in fabricantes]
-        return jsonify(resultado), 200
-    except Exception as e:
-        logger.error(f"Erro ao buscar fabricantes: {e}")
-        return {"message": "Erro ao coletar fabricantes"}, 500
     finally:
         session.close()
 
@@ -120,64 +103,6 @@ def get_anos():
         return {"message": "Erro ao coletar anos"}, 500
     finally:
         session.close()
-
-@app.post('/usuario', tags=[usuario_tag], responses={"200": UsuarioViewSchema, "409": ErrorSchema, "400": ErrorSchema})
-def add_usuario(form: UsuarioSchema):
-    """Adiciona um novo usuário à base de dados."""
-    usuario = Usuario(
-        nome=form.nome,
-        estado=form.estado
-    )
-    logger.debug(f"Adicionando usuário de nome: '{usuario.nome}'")
-    try:
-        session = Session()
-        session.add(usuario)
-        session.commit()
-        logger.debug(f"Adicionado usuário de nome: '{usuario.nome}'")
-        
-        return {"id": usuario.id, "nome": usuario.nome, "estado": usuario.estado}, 200
-
-    except IntegrityError as e:
-        error_msg = "Usuário de mesmo nome já salvo na base :/"
-        logger.warning(f"Erro ao adicionar usuário '{usuario.nome}', {error_msg}")
-        return {"message": error_msg}, 409
-
-    except Exception as e:
-        error_msg = "Não foi possível salvar novo usuário :/"
-        logger.warning(f"Erro ao adicionar usuário '{usuario.nome}', {error_msg}")
-        return {"message": error_msg}, 400
-    
-@app.delete('/usuario', tags=[usuario_tag])
-def delete_usuario():
-    """Exclui um usuário da base de dados pelo CPF informado."""
-    id_usuario = request.args.get('id_usuario')
-    
-    if not id_usuario:
-        return {"message": "O parâmetro 'id_usuario' é obrigatório."}, 400
-
-    logger.debug(f"Solicitação de exclusão para o usuário com ID: '{id_usuario}'")
-    
-    session = Session()
-    try:
-        usuario = session.query(Usuario).filter(Usuario.id == id_usuario).first()
-        
-        if not usuario:
-            logger.warning(f"Usuário com ID '{id_usuario}' não encontrado para exclusão.")
-            return {"message": "Usuário não encontrado."}, 404
-        
-        session.delete(usuario)
-        session.commit()
-        
-        logger.info(f"Usuário com ID '{id_usuario}' excluído com sucesso.")
-        return {"message": "Usuário excluído com sucesso."}, 200
-
-    except Exception as e:
-        session.rollback()
-        logger.error(f"Erro ao excluir usuário com ID '{id_usuario}': {e}")
-        return {"message": "Erro interno ao tentar excluir o usuário."}, 500
-    finally:
-        session.close()
-
 
 @app.post('/usuario-carro', tags=[usuario_tag])
 def add_usuario_veiculo():
@@ -272,6 +197,7 @@ def get_usuario_veiculo():
             "nome": usuario.nome,
             "estado": usuario.estado,
             "veiculo": {
+                "id_fabricante": carro.fabricante_ref.id if carro.fabricante_ref else "Desconhecido",
                 "fabricante": carro.fabricante_ref.fabricante if carro.fabricante_ref else "Desconhecido",
                 "modelo": carro.modelo,
                 "ano": carro.ano,
@@ -284,7 +210,6 @@ def get_usuario_veiculo():
         return {"message": "Erro interno ao buscar os dados."}, 500
     finally:
         session.close()
-
 
 @app.get('/fabricantes_combustao', tags=[veiculo_combustao_tag])
 def get_fabricantes_combustao():
