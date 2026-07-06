@@ -1,6 +1,7 @@
 Flask
 Flask-Cors
 flask-openapi3[swagger]
+flask-openapi3
 Flask-SQLAlchemy
 nose2
 pydantic

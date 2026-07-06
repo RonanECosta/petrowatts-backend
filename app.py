@@ -8,6 +8,8 @@ from flask_cors import CORS
 from model import Usuario, Fabricante, CarroEletrico, CarroCombustao, UsuarioCarro, Session
 from schemas import UsuarioSchema, UsuarioViewSchema, ErrorSchema
 from logger import logger
+from schemas.carro_combustao import AnosQuerySchema, CarroCombustaoSchema, ListagemAnosSchema, ListagemModelosSchema, ModeloQueryByIdFabricanteSchema, ModeloViewSchema
+from schemas.usuario import AtualizarUsuarioCarroFormSchema, AtualizarUsuarioCarroSucessoSchema, CadastroUsuarioCarroFormSchema, CadastroUsuarioCarroSucessoSchema, UsuarioCarroDetalhesViewSchema, UsuarioCarroQuerySchema, UsuarioDeleteQuerySchema, UsuarioDeleteSucessoSchema
 
 info = Info(title="Petrowatts - comparador veículos à combustão x elétricos", version="1.0.0")
 app = OpenAPI(__name__, info=info)
@@ -23,28 +25,24 @@ def home():
     """Redireciona para documentação Swagger."""
     return redirect('/openapi/swagger')
 
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory('static', 'favicon.ico', mimetype='image/x-icon')
-
 @app.get('/veiculo-combustao', tags=[veiculo_combustao_tag])
 def get_todos_veiculos_combustao():
     """Busca todos os carros a combustão."""
-    logger.debug("Coletando lista de carros a combustão da base técnica")
+    logger.debug("Coletando lista de carros a combustão")
     session = Session()
     try:
         carros = session.query(CarroCombustao).all()
         
         lista_veiculos = []
         for c in carros:
-            fabricante = c.fabricante_ref
-            nome_fabricante = fabricante.fabricante if fabricante else "Desconhecido"
-            
-            ano_numerico = c.ano if c.ano is not None else 0
             lista_veiculos.append({
-                "nome": f"{nome_fabricante} {c.modelo}",
-                "quantidade": f"Ano {ano_numerico}",
-                "valor": f"R$ {c.valor_revenda:,.2f}"
+                "id": c.id,
+                "id_fabricante": c.fabricante_ref.id if c.fabricante_ref else None,
+                "fabricante": c.fabricante_ref.fabricante if c.fabricante_ref else "Desconhecido",
+                "modelo": c.modelo,
+                "valor_revenda": f"{c.valor_revenda:.2f}",
+                "ano": f"{c.ano:.0f}",
+                "consumo": f"{c.consumo:.2f} km/l"
             })
             
         return jsonify({"veiculos": lista_veiculos}), 200
@@ -56,14 +54,12 @@ def get_todos_veiculos_combustao():
         session.close()
 
 
-@app.get('/modelos', tags=[veiculo_combustao_tag])
-def get_modelos():
+@app.get('/modelos', tags=[veiculo_combustao_tag], responses={"200": ListagemModelosSchema, "500": ErrorSchema})
+def get_modelos(query: ModeloQueryByIdFabricanteSchema):
     """Busca os modelos de veículos filtrados pelo ID do fabricante selecionado."""
-    id_fabricante = request.args.get('id_fabricante')
+    # Acessa a propriedade id_fabricante definida no seu ModeloQueryByIdFabricanteSchema
+    id_fabricante = query.id_fabricante
     logger.debug(f"Coletando modelos para o fabricante ID: {id_fabricante}")
-    
-    if not id_fabricante:
-        return jsonify({"message": "O parâmetro id_fabricante é obrigatório"}), 400
         
     session = Session()
     try:
@@ -80,15 +76,13 @@ def get_modelos():
         session.close()
 
 
-@app.get('/anos', tags=[veiculo_combustao_tag])
-def get_anos():
+@app.get('/anos', tags=[veiculo_combustao_tag], responses={"200": ListagemAnosSchema, "500": ErrorSchema})
+def get_anos(query: AnosQuerySchema):
     """Busca os anos disponíveis filtrados pelo nome do modelo selecionado."""
-    modelo_selecionado = request.args.get('modelo')
+    # O parâmetro agora é extraído do objeto query validado
+    modelo_selecionado = query.modelo
     logger.debug(f"Coletando anos para o modelo: {modelo_selecionado}")
     
-    if not modelo_selecionado:
-        return {"message": "O parâmetro modelo é obrigatório"}, 400
-        
     session = Session()
     try:
         anos = session.query(CarroCombustao.ano)\
@@ -100,23 +94,24 @@ def get_anos():
         return jsonify(resultado), 200
     except Exception as e:
         logger.error(f"Erro ao buscar anos: {e}")
-        return {"message": "Erro ao coletar anos"}, 500
+        return jsonify({"message": "Erro ao coletar anos"}), 500
     finally:
         session.close()
 
-@app.post('/usuario-carro', tags=[usuario_tag])
-def add_usuario_veiculo():
+@app.post('/usuario-carro', tags=[usuario_tag], responses={"200": CadastroUsuarioCarroSucessoSchema, "404": ErrorSchema, "409": ErrorSchema, "500": ErrorSchema})
+def add_usuario_veiculo(form: CadastroUsuarioCarroFormSchema):
     """
     Cadastra o usuário, localiza o carro selecionado pelos combos
     e vincula ambos na tabela associativa salvando a rodagem mensal.
     """
-    nome_usuario = request.form.get('nome')
-    estado_usuario = request.form.get('uf')
-    cpf_usuario = request.form.get('cpf')
-    id_fabricante = request.form.get('id_fabricante')
-    modelo_carro = request.form.get('modelo')
-    ano_carro = request.form.get('ano')
-    km_mensal = request.form.get('km_mensal')
+    # Os dados agora são extraídos de forma limpa e tipada a partir do objeto 'form'
+    nome_usuario = form.nome
+    estado_usuario = form.uf
+    cpf_usuario = form.cpf
+    id_fabricante = form.id_fabricante
+    modelo_carro = form.modelo
+    ano_carro = form.ano
+    km_mensal = form.km_mensal
 
     logger.debug(f"Iniciando cadastro completo para o usuário: '{nome_usuario}'")
     
@@ -128,53 +123,47 @@ def add_usuario_veiculo():
             CarroCombustao.ano == ano_carro
         ).first()
 
-        logger.info(f"Carro encontrado: {carro.modelo} ({carro.ano}) do fabricante ID {carro.id_fabricante}") if carro else logger.warning("Carro não encontrado para a combinação selecionada.")
-
         if not carro:
-            return {"message": "A combinação de veículo selecionada não foi encontrada no banco de dados."}, 404
+            return jsonify({"message": "A combinação de veículo selecionada não foi encontrada no banco de dados."}), 404
 
         novo_usuario = Usuario(cpf=cpf_usuario, nome=nome_usuario, estado=estado_usuario)
         session.add(novo_usuario)
-        session.flush() # O flush gera o ID do usuário sem fechar a transação do banco
+        session.flush() 
         logger.info(f"Usuário criado: {novo_usuario.nome} ({novo_usuario.cpf}) do estado {novo_usuario.estado}")
 
         vinculo = UsuarioCarro(
             id_usuario=novo_usuario.id,
             id_carro_combustao=carro.id,
-            km_mensal = int(km_mensal) if km_mensal else 0
+            km_mensal = km_mensal # O Pydantic já garante que chega como inteiro
         )
         session.add(vinculo)
-        
         session.commit()
         
         logger.debug(f"Sucesso! Usuário {novo_usuario.id} vinculado ao carro {carro.id}")
-        return {
+        
+        return jsonify({
             "message": "Usuário e veículo vinculados com sucesso!",
             "id_usuario": novo_usuario.id
-            }, 200
+        }), 200
 
     except IntegrityError as e:
         session.rollback()
         error_msg = "Usuário com este mesmo CPF já está salvo na base."
         logger.warning(f"Erro de integridade para '{cpf_usuario}': {error_msg}")
-        return {"message": error_msg}, 409
+        return jsonify({"message": error_msg}), 409
     except Exception as e:
         session.rollback()
         logger.error(f"Erro inesperado no cadastro: {e}")
-        return {"message": "Não foi possível salvar o registro devido a um erro interno."}, 500
+        return jsonify({"message": "Não foi possível salvar o registro devido a um erro interno."}), 500
     finally:
         session.close()
 
-@app.get('/usuario-carro', tags=[usuario_tag])
-def get_usuario_veiculo():
+@app.get('/usuario-carro', tags=[usuario_tag], responses={"200": UsuarioCarroDetalhesViewSchema, "404": ErrorSchema, "500": ErrorSchema})
+def get_usuario_veiculo(query: UsuarioCarroQuerySchema):
     """
     Busca os detalhes do usuário e do veículo vinculado a ele pelo cpf.
     """
-    cpf_usuario = request.args.get('cpf')
-    
-    if not cpf_usuario:
-        return {"message": "O parâmetro 'cpf' é obrigatório."}, 400
-
+    cpf_usuario = query.cpf
     logger.debug(f"Buscando dados para o usuário: '{cpf_usuario}'")
     
     session = Session()
@@ -207,7 +196,7 @@ def get_usuario_veiculo():
 
     except Exception as e:
         logger.error(f"Erro ao buscar dados do usuário: {e}")
-        return {"message": "Erro interno ao buscar os dados."}, 500
+        return jsonify({"message": "Erro interno ao buscar os dados."}), 500
     finally:
         session.close()
 
@@ -228,21 +217,22 @@ def get_fabricantes_combustao():
     finally:
         session.close()
 
-@app.patch('/usuario-carro', tags=[usuario_tag])
-def update_usuario_veiculo():
+@app.patch('/usuario-carro', tags=[usuario_tag], responses={"200": AtualizarUsuarioCarroSucessoSchema, "404": ErrorSchema, "500": ErrorSchema})
+def update_usuario_veiculo(form: AtualizarUsuarioCarroFormSchema):
     """
-    Atualiza os dados do usuário e do veículo vinculado a ele pelo cpf.
+    Atualiza os dados do usuário e do veículo vinculado a ele pelo id_usuario.
     """
-    id_usuario = request.form.get('id_usuario')
-    nome_usuario = request.form.get('nome')
-    estado_usuario = request.form.get('uf')
-    cpf_usuario = request.form.get('cpf')
-    id_fabricante = request.form.get('id_fabricante')
-    modelo_carro = request.form.get('modelo')
-    ano_carro = request.form.get('ano')
-    km_mensal = request.form.get('km_mensal')
+    # Coleta todas as variáveis diretamente do formulário validado pelo Pydantic
+    id_usuario = form.id_usuario
+    nome_usuario = form.nome
+    estado_usuario = form.uf
+    cpf_usuario = form.cpf
+    id_fabricante = form.id_fabricante
+    modelo_carro = form.modelo
+    ano_carro = form.ano
+    km_mensal = form.km_mensal
 
-    logger.debug(f"Iniciando alteração para o usuário: '{nome_usuario}'")
+    logger.debug(f"Iniciando alteração para o usuário ID: '{id_usuario}'")
     
     session = Session()
 
@@ -283,5 +273,35 @@ def update_usuario_veiculo():
         session.rollback()
         logger.error(f"Erro ao atualizar usuário ID {id_usuario}: {e}")
         return {"message": "Erro interno ao tentar atualizar."}, 500
+    finally:
+        session.close()
+
+@app.delete('/usuario', tags=[usuario_tag], responses={"200": UsuarioDeleteSucessoSchema, "404": ErrorSchema, "500": ErrorSchema})
+def delete_usuario(query: UsuarioDeleteQuerySchema):
+    """Exclui um usuário da base de dados pelo ID informado na URL."""
+    # O parâmetro agora é capturado via query string (?id_usuario=...) de forma tratada como inteiro
+    id_usuario = query.id_usuario
+
+    logger.debug(f"Solicitação de exclusão para o usuário com ID: '{id_usuario}'")
+    
+    
+    session = Session()
+    try:
+        usuario = session.query(Usuario).filter(Usuario.id == id_usuario).first()
+        
+        if not usuario:
+            logger.warning(f"Usuário com ID '{id_usuario}' não encontrado para exclusão.")
+            return {"message": "Usuário não encontrado."}, 404
+        
+        session.delete(usuario)
+        session.commit()
+        
+        logger.info(f"Usuário com ID '{id_usuario}' excluído com sucesso.")
+        return {"message": "Usuário excluído com sucesso."}, 200
+
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Erro ao excluir usuário com ID '{id_usuario}': {e}")
+        return {"message": "Erro interno ao tentar excluir o usuário."}, 500
     finally:
         session.close()

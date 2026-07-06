@@ -28,7 +28,6 @@ class FabricanteViewSchema(BaseModel):
         # Permite que o Pydantic mapeie o objeto do SQLAlchemy diretamente
         from_attributes = True
 
-
 class ListaFabricantesSchema(BaseModel):
     """ Define a estrutura de retorno de uma lista de fabricantes.
     """

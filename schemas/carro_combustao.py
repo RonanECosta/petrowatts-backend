@@ -38,6 +38,14 @@ class CarroCombustaoViewSchema(BaseModel):
         # Permite ler o objeto do SQLAlchemy diretamente
         from_attributes = True 
 
+class ModeloQueryByIdFabricanteSchema(BaseModel):
+    id_fabricante: int
+
+class ModeloViewSchema(BaseModel):
+    modelo: str
+
+class ListagemModelosSchema(BaseModel):
+    modelos: List[ModeloViewSchema]
 
 class ListaCarrosCombustaoSchema(BaseModel):
     """ Define a estrutura de retorno de uma lista de carros a combustão.
@@ -61,3 +69,21 @@ def apresenta_carros_combustao(carros: List[CarroCombustao]):
         })
 
     return {"carros": result}
+
+
+class AnosQuerySchema(BaseModel):
+    """ Define o parâmetro de busca obrigatório para listar os anos de um modelo.
+    """
+    modelo: str = Field("Argo 1.0", description="Nome exato do modelo do veículo (ex: Civic)")
+
+
+class AnoViewSchema(BaseModel):
+    """ Define a estrutura de como cada ano será retornado.
+    """
+    ano: int = Field(2020, description="Ano de fabricação do veículos")
+
+
+class ListagemAnosSchema(BaseModel):
+    """ Define a estrutura de retorno da lista final de anos.
+    """
+    anos: List[AnoViewSchema]
