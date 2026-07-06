@@ -25,11 +25,11 @@ CREATE TABLE IF NOT EXISTS "fabricantes" (
 CREATE TABLE IF NOT EXISTS "carros_eletricos" (
     "id" INTEGER NOT NULL,
     "id_fabricante" INTEGER NOT NULL,
-    "valor_compra" REAL NOT NULL,
-    "consumo_mj_km" NUMERIC NOT NULL,
+    "valor_compra" NUMERIC(9, 2) NOT NULL,
+    "consumo_mj_km" NUMERIC(3, 2) NOT NULL,
     "potencia_cv" INTEGER NOT NULL,
-    "autonomia_km" REAL NOT NULL,
-    "capacidade_bat_kwh" REAL NOT NULL,
+    "autonomia_km" INTEGER NOT NULL,
+    "capacidade_bat_kwh" NUMERIC(6, 2) NOT NULL,
     "porta_malas_litros" INTEGER NOT NULL,
     "necessario_infra" BOOLEAN NOT NULL,
     "thumbnail" BLOB,
@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS "carros_eletricos" (
 CREATE TABLE IF NOT EXISTS "carros_combustao" (
     "id" INTEGER NOT NULL,
     "id_fabricante" INTEGER NOT NULL,
-    "valor_revenda" REAL NOT NULL,
-    "consumo" NUMERIC NOT NULL,
+    "valor_revenda" NUMERIC(9, 2) NOT NULL,
+    "consumo" NUMERIC(3, 1) NOT NULL,
     "ano" NUMERIC NOT NULL,
     PRIMARY KEY ("id"),
     FOREIGN KEY ("id_fabricante") REFERENCES "fabricantes" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
