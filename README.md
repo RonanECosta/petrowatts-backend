@@ -39,83 +39,66 @@ Para o correto funcionamento das funcionalidades acima, serão necessário o man
 ### Tecnologias Utilizadas
 
 * **Frontend:** HTML, Bootstrap, CSS e Flask
-* **Backend:** Python e banco de dados SQLite
+* **Backend:** Python e MySQL 8.0 (em container próprio e populado via scripts de carga inicial na pasta initdb/)
 * **Documentação:** Swagger para documentar as APIs
 
 ### Diagrama BD
 
 * <https://www.drawdb.app/editor?shareId=78117b3e80c9cd07b123d5c4a1aba217>
 
-## Preparação do ambiente de execução
+## Execução da Aplicação (Docker)
 
-Conforme explicado nas aulas, é de suma importância a utilização de ambientes virtuais para evitar conflitos de bibliotecas e outras dependências utilizadas no projeto versus a configuração global do seu computador.
+Toda a infraestrutura do projeto está containerizada via Docker Compose.
 
-Siga os passos abaixo para configurar o ambiente virtual e instalar as dependências do projeto.
+### Pré-requisitos
 
-### Criação do ambiente
+Docker Desktop instalado e em execução.
 
-Abra o terminal, navegue até a raiz do projeto e execute:
-``bash
-python -m venv .venv
-``
+### Passos para subir a aplicação
 
-Escolha o comando de acordo com o terminal que você está utilizando:
+1. Clone o repositório e acesse a pasta raiz do projeto:
 
-* **PowerShell:**
+    ```cmd
+    git clone <URL_DO_REPOSITORIO>
+    cd petrowatts
+    ```
 
-  ```powershell
-  .venv\Scripts\Activate.ps1
-  ```
+2. Suba os containers do banco de dados MySQL e da API Python:
 
-* **Prompt de Comando/CMD:**
+    ```bash
+    docker compose up -d
+    ```
 
-  ```cmd
-  .venv\Scripts\activate.bat
-  ```
+    Na primeira execução, o banco MySQL será criado e populado automaticamente com os dados de carga inicial.
 
-> *Nota: O prefixo `(.venv)` deverá aparecer no início da linha, indicando assim que o ambiente está ativo.*
+3. Acesse a aplicação:
 
-### Instalação das dependências
+    API / Documentação Interativa (Swagger): <http://localhost:5000/openapi>
+    Aplicação Web: <http://localhost:5000>
 
-Com o ambiente virtual ativado, instale todos os pacotes necessários:
+4. Para parar os containers:
 
-```bash
-pip install -r requirements.txt
-```
-
-**Caso seja necessário** instalar uma nova biblioteca (por exemplo, o Pydantic), utilize:
-
-```bash
-pip install pydantic
-```
-
-Sempre que instalar um novo pacote, atualize o arquivo de dependências para o Git com o comando:
-
-```bash
-pip freeze > requirements.txt
-```
-
-### Execução
-
-Para executar o servidor local, execute
-
-```bash
-(env)$ flask run --host 0.0.0.0 --port 5000
-```
+    ```bash
+    docker compose down
+    ```
 
 ## Plano de desenvolvimento
 
-### Primeira Sprint
+### Primeira Sprint (Fullstack Básico) - Entregue (1.0)
 
 * home html, com css e js
 * cadastro de usuário
 * cadatro de carro a combustão
 * carga inicial de dados no BD
 
-### Segunda Sprint
+### Segunda Sprint (Back-end Avançado) - Em desenvolvimento
 
-* À definir;
+* Conteinerização do backend e BD
+* Migração de armazenamento para banco de dados MySQL com scripts de carga automática
+  * adição de imagens (blob)
+* Integração com a API pública da ANEEL para obtenção da tarifa oficial por UF
+* Motor de cálculo de consumo e comparativo financeiro entre elétrico e combustão
 
-### Terceira Sprint
+### Terceira Sprint - Não iniciado
 
 * À definir;
