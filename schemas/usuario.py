@@ -4,7 +4,7 @@ from model.usuario import Usuario
 
 # Função auxiliar para garantir que qualquer número enviado vire string antes da validação
 def coerce_to_string(v: Any) -> str:
-    return str(v) if v is not None else v
+    return str(v) if v is not None else "0"
 
 # Criamos um tipo customizado que converte números para string automaticamente
 CoercedStr = Annotated[str, BeforeValidator(coerce_to_string)]
