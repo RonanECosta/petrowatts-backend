@@ -1,6 +1,6 @@
 -- 1. CARGA DA TABELA: fabricantes
 -- Mantendo consistência e adicionando novas marcas tradicionais do mercado nacional
-INSERT INTO "fabricantes" ("id", "fabricante") VALUES
+INSERT INTO fabricantes (id, fabricante) VALUES
 (6, 'Volkswagen'),
 (7, 'Fiat'),
 (8, 'Toyota'),
@@ -8,11 +8,12 @@ INSERT INTO "fabricantes" ("id", "fabricante") VALUES
 (10, 'Honda'),
 (11, 'Jeep'),
 (12, 'Hyundai'),
-(13, 'Nissan');
+(13, 'Nissan'),
+(14, 'Chevrolet');
 
 -- 2. CARGA DA TABELA: carros_combustao
 -- CARGA DA TABELA: carros_combustao
-INSERT INTO "carros_combustao" ("id", "id_fabricante", "modelo", "valor_revenda", "consumo", "ano") VALUES
+INSERT INTO carros_combustao (id, id_fabricante, modelo, valor_revenda, consumo, ano) VALUES
 
 -- 1. Volkswagen Gol 1.0 (ID Marca: 6) - Fabricado até 2023 (Saiu de linha no fim de 2022/23)
 (1, 6, 'Gol 1.0',39906.10, 12.9, 2014),
@@ -26,18 +27,18 @@ INSERT INTO "carros_combustao" ("id", "id_fabricante", "modelo", "valor_revenda"
 (9, 6, 'Gol 1.0',66044.43, 12.9, 2022),
 (10, 6, 'Gol 1.0',70337.32, 12.9, 2023),
 
--- 2. Chevrolet Onix 1.0 (ID Marca: 5) - Fabricado continuamente de 2014 a 2024
-(11, 5, 'Onix 1.0',42597.31, 11.5, 2014),
-(12, 5, 'Onix 1.0',45366.13, 11.5, 2015),
-(13, 5, 'Onix 1.0',48314.93, 11.5, 2016),
-(14, 5, 'Onix 1.0',51455.40, 11.5, 2017),
-(15, 5, 'Onix 1.0',54800.00, 11.5, 2018),
-(16, 5, 'Onix 1.0',58362.00, 11.5, 2019),
-(17, 5, 'Onix 1.0',62155.53, 11.5, 2020),
-(18, 5, 'Onix 1.0',66195.64, 11.5, 2021),
-(19, 5, 'Onix 1.0',70498.36, 11.5, 2022),
-(20, 5, 'Onix 1.0',75080.75, 11.5, 2023),
-(21, 5, 'Onix 1.0',79961.00, 11.5, 2024),
+-- 2. Chevrolet Onix 1.0 (ID Marca: 14) - Fabricado continuamente de 2014 a 2024
+(11, 14, 'Onix 1.0',42597.31, 11.5, 2014),
+(12, 14, 'Onix 1.0',45366.13, 11.5, 2015),
+(13, 14, 'Onix 1.0',48314.93, 11.5, 2016),
+(14, 14, 'Onix 1.0',51455.40, 11.5, 2017),
+(15, 14, 'Onix 1.0',54800.00, 11.5, 2018),
+(16, 14, 'Onix 1.0',58362.00, 11.5, 2019),
+(17, 14, 'Onix 1.0',62155.53, 11.5, 2020),
+(18, 14, 'Onix 1.0',66195.64, 11.5, 2021),
+(19, 14, 'Onix 1.0',70498.36, 11.5, 2022),
+(20, 14, 'Onix 1.0',75080.75, 11.5, 2023),
+(21, 14, 'Onix 1.0',79961.00, 11.5, 2024),
 
 -- 3. Hyundai HB20 1.0 (ID Marca: 12) - Fabricado continuamente de 2014 a 2024
 (22, 12, 'HB20 1.0',45473.40, 11.6, 2014),
@@ -131,13 +132,13 @@ INSERT INTO "carros_combustao" ("id", "id_fabricante", "modelo", "valor_revenda"
 (94, 10, 'Civic 2.0',114182.21, 10.5, 2020),
 (95, 10, 'Civic 2.0',121604.05, 10.5, 2021),
 
--- 12. Chevrolet Onix Plus 1.0 (ID Marca: 5) - Lançado em 2019 (Substituindo o Prisma)
-(96, 5, 'Onix Plus 1.0',70317.66, 11.9, 2019),
-(97, 5, 'Onix Plus 1.0',73400.00, 11.9, 2020),
-(98, 5, 'Onix Plus 1.0',78171.00, 11.9, 2021),
-(99, 5, 'Onix Plus 1.0',83252.12, 11.9, 2022),
-(100, 5, 'Onix Plus 1.0',88663.50, 11.9, 2023),
-(101, 5, 'Onix Plus 1.0',94426.63, 11.9, 2024),
+-- 12. Chevrolet Onix Plus 1.0 (ID Marca: 14) - Lançado em 2019 (Substituindo o Prisma)
+(96, 14, 'Onix Plus 1.0',70317.66, 11.9, 2019),
+(97, 14, 'Onix Plus 1.0',73400.00, 11.9, 2020),
+(98, 14, 'Onix Plus 1.0',78171.00, 11.9, 2021),
+(99, 14, 'Onix Plus 1.0',83252.12, 11.9, 2022),
+(100, 14, 'Onix Plus 1.0',88663.50, 11.9, 2023),
+(101, 14, 'Onix Plus 1.0',94426.63, 11.9, 2024),
 
 -- 13. Volkswagen Voyage 1.6 (ID Marca: 6) - Fabricado de 2014 até o fim de linha em 2022
 (102, 6, 'Voyage 1.6',39037.28, 11.8, 2014),
@@ -190,12 +191,12 @@ INSERT INTO "carros_combustao" ("id", "id_fabricante", "modelo", "valor_revenda"
 (141, 6, 'T-Cross 1.0', 111825.00, 12.1, 2023),
 (142, 6, 'T-Cross 1.0', 119093.63, 12.1, 2024),
 
--- 18. Chevrolet Tracker 1.0 Turbo (ID Marca: 5) - Esta nova geração nacional (Turbo) estreou em 2020
-(143, 5, 'Tracker 1.0 Turbo', 90337.53, 11.2, 2020),
-(144, 5, 'Tracker 1.0 Turbo', 96400.00, 11.2, 2021),
-(145, 5, 'Tracker 1.0 Turbo', 102666.00, 11.2, 2022),
-(146, 5, 'Tracker 1.0 Turbo', 109339.29, 11.2, 2023),
-(147, 5, 'Tracker 1.0 Turbo', 116446.34, 11.2, 2024),
+-- 18. Chevrolet Tracker 1.0 Turbo (ID Marca: 14) - Esta nova geração nacional (Turbo) estreou em 2020
+(143, 14, 'Tracker 1.0 Turbo', 90337.53, 11.2, 2020),
+(144, 14, 'Tracker 1.0 Turbo', 96400.00, 11.2, 2021),
+(145, 14, 'Tracker 1.0 Turbo', 102666.00, 11.2, 2022),
+(146, 14, 'Tracker 1.0 Turbo', 109339.29, 11.2, 2023),
+(147, 14, 'Tracker 1.0 Turbo', 116446.34, 11.2, 2024),
 
 -- 19. Renault Duster 1.6 (ID Marca: 3) - Fabricado continuamente de 2014 a 2024
 (148, 3, 'Duster 1.6', 49755.77, 10.8, 2014),
