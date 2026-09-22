@@ -3,17 +3,19 @@
 
 ## Summary
 
-- [Introdução](#introdução)
-- [Estrutura de tabelas](#estrutura-de-tabelas)
-  - [usuarios](#usuarios)
-  - [usuarios_carros](#usuarios_carros)
-  - [fabricantes](#fabricantes)
-  - [carros_eletricos](#carros_eletricos)
-  - [carros_combustao](#carros_combustao)
-  - [acessorios](#acessorios)
-  - [acessorio_carro_eletrico](#acessorio_carro_eletrico)
-- [Relacionomentos](#relacionomentos)
-- [Diagrama do Banco de Dados](#diagrama-do-banco-de-dados)
+- [petrowwats-diagrama-bd documentation](#petrowwats-diagrama-bd-documentation)
+  - [Summary](#summary)
+  - [Introdução](#introdução)
+  - [Estrutura de tabelas](#estrutura-de-tabelas)
+    - [usuarios](#usuarios)
+    - [usuarios\_carros](#usuarios_carros)
+    - [fabricantes](#fabricantes)
+    - [carros\_eletricos](#carros_eletricos)
+    - [carros\_combustao](#carros_combustao)
+    - [acessorios](#acessorios)
+    - [acessorio\_carro\_eletrico](#acessorio_carro_eletrico)
+  - [Relacionomentos](#relacionomentos)
+  - [Diagrama do Banco de Dados](#diagrama-do-banco-de-dados)
 
 ## Introdução
 
@@ -34,11 +36,12 @@ A modelagem foi desenvolvida para armazenar dados necessários para o funcionome
 
 ### usuarios_carros
 
-| Nome           | Tipo    | Configurações                  | References                                   |
-| -------------- | ------- | ------------------------------ | -------------------------------------------- |
-| **id**         | INTEGER | 🔑 PK, not null, autoincrement |                                              |
-| **id_usuario** | INTEGER | not null                       |                                              |
-| **id_carro**   | INTEGER | not null                       | fk_usuarios_carros_id_carro_carros_combustao |  
+| Nome                      | Tipo    | Configurações                   | References                                   |
+| ------------------------- | ------- | ------------------------------  | -------------------------------------------- |
+| **id**                    | INTEGER | 🔑 PK, not null, autoincrement  |                                              |
+| **id_usuario**            | INTEGER | not null                        |                                              |
+| **km_mensal**             | INTEGER | not null                        |                                              |
+| **id_carro_combustao**    | INTEGER | not null                        | fk_usuarios_carros_id_carro_carros_combustao |  
 
 ### fabricantes
 
@@ -81,12 +84,12 @@ A modelagem foi desenvolvida para armazenar dados necessários para o funcionome
 
 ### acessorio_carro_eletrico
 
-| Nome              | Tipo    | Configurações                  | References                                            |
-| ----------------- | ------- | ------------------------------ | ----------------------------------------------------- |
-| **id**            | INTEGER | 🔑 PK, not null, autoincrement |                                                       |
-| **id_carro**      | INTEGER | not null                       | fk_acessorio_carro_eletrico_id_carro_carros_eletricos |
-| **id_acessorio**  | INTEGER | not null                       | fk_acessorio_carro_eletrico_id_acessorio_acessorios   |
-| **valor_tamanho** | REAL    | not null                       |                                                       |
+| Nome                  | Tipo    | Configurações                  | References                                            |
+| --------------------- | ------- | ------------------------------ | ----------------------------------------------------- |
+| **id**                | INTEGER | 🔑 PK, not null, autoincrement |                                                       |
+| **id_carro_eletrico** | INTEGER | not null                       | fk_acessorio_carro_eletrico_id_carro_carros_eletricos |
+| **id_acessorio**      | INTEGER | not null                       | fk_acessorio_carro_eletrico_id_acessorio_acessorios   |
+| **valor_tamanho**     | REAL    | not null                       |                                                       |
 
 ## Relacionomentos
 
@@ -117,7 +120,7 @@ erDiagram
  usuarios_carros {
   INTEGER id
   INTEGER id_usuario
-  INTEGER id_carro
+  INTEGER id_carro_combustao
  }
 
  fabricantes {
@@ -153,7 +156,7 @@ erDiagram
 
  acessorio_carro_eletrico {
   INTEGER id
-  INTEGER id_carro
+  INTEGER id_carro_eletrico
   INTEGER id_acessorio
   REAL valor_tamanho
  }
