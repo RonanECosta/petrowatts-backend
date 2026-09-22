@@ -10,3 +10,5 @@ SQLAlchemy-Utils
 typing_extensions
 werkzeug
 requests
+pymysql
+cryptography
