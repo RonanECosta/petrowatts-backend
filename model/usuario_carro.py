@@ -15,4 +15,4 @@ class UsuarioCarro(Base):
     km_mensal = Column(Integer, nullable=False)
 
     usuario_ref = relationship("Usuario", back_populates="carros")
-    carro_ref = relationship("CarroCombustao", back_populates="usuarios")
+    carro_combustao_ref = relationship("CarroCombustao", back_populates="usuarios")

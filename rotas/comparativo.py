@@ -1,8 +1,6 @@
 from flask import jsonify
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
-from pydantic import BaseModel, Field
-from typing import Optional
 from schemas.calculo import (
     CalculoEnergiaQuerySchema,
     CalculoEnergiaViewSchema,
@@ -11,22 +9,10 @@ from schemas.calculo import (
 )
 from services.energia_service import calcular_custo_energia
 
-# Tag para organização no Swagger/OpenAPI
 comparativo_tag = Tag(name="Comparativo", description="Rotas de comparativo de custos energéticos")
+bp_comparativo = APIBlueprint('comparativo', __name__, abp_tags=[comparativo_tag])
 
-# Blueprint da rota
-bp_comparativo = APIBlueprint(
-    'comparativo', 
-    __name__, 
-    url_prefix='/api',
-    abp_tags=[comparativo_tag]
-)
-
-
-@bp_comparativo.get(
-    '/comparar-custo',
-    summary="Calcula o custo mensal de energia de um veículo elétrico",
-    responses={
+@bp_comparativo.get('/comparar-custo', summary="Calcula o custo mensal de energia de um veículo elétrico", responses={
         200: CalculoEnergiaViewSchema,
         400: ErrorSchema,
         500: ErrorSchema

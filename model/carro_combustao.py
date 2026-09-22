@@ -16,4 +16,4 @@ class CarroCombustao(Base):
     ano = Column(Numeric, nullable=False)
 
     fabricante_ref = relationship("Fabricante", back_populates="carros_combustao")
-    usuarios = relationship("UsuarioCarro", back_populates="carro_ref")
+    usuarios = relationship("UsuarioCarro", back_populates="carro_combustao_ref")

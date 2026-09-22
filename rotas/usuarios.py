@@ -13,8 +13,8 @@ from schemas import ErrorSchema
 from logger import logger
 
 # Cria um blueprint específico para usuários com suas tags e prefixo de rota se quiser
-usuario_tag = Tag(name="Usuário", description="Adição, visualização e remoção de usuários à base")
-bp_usuario = APIBlueprint('usuario', __name__, tag=usuario_tag)
+usuario_tag = Tag(name="Usuário", description="Rotas de gerenciamento de usuários")
+bp_usuario = APIBlueprint('usuario', __name__, abp_tags=[usuario_tag])
 
 @bp_usuario.post('/usuario-carro', tags=[usuario_tag], responses={"200": CadastroUsuarioCarroSucessoSchema, "404": ErrorSchema, "409": ErrorSchema, "500": ErrorSchema})
 def add_usuario_veiculo(form: CadastroUsuarioCarroFormSchema):

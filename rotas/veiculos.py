@@ -11,7 +11,7 @@ from schemas import ErrorSchema
 from logger import logger
 
 veiculo_combustao_tag = Tag(name="Veículos a Combustão", description="Consultas de marcas, modelos e anos da base")
-bp_veiculo = APIBlueprint('veiculo', __name__, tag=veiculo_combustao_tag)
+bp_veiculo = APIBlueprint('veiculo', __name__, abp_tags=[veiculo_combustao_tag])
 
 @bp_veiculo.get('/veiculo-combustao', tags=[veiculo_combustao_tag])
 def get_todos_veiculos_combustao():

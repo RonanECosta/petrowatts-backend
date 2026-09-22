@@ -8,6 +8,7 @@ class CarroEletricoSchema(BaseModel):
         O campo 'thumbnail' pode ser enviado como string Base64 ou nulo.
     """
     id_fabricante: int = Field(..., description="ID do fabricante associado")
+    modelo: str = Field(..., description="Modelo do veículo elétrico")
     valor_compra: float = Field(..., gt=0, description="Valor de compra do veículo")
     consumo_mj_km: Decimal = Field(..., description="Consumo em MJ/km")
     potencia_cv: int = Field(..., gt=0, description="Potência em Cavalos (CV)")
@@ -21,6 +22,7 @@ class CarroEletricoSchema(BaseModel):
         json_schema_extra = {
             "example": {
                 "id_fabricante": 1,
+                "modelo": "Modelo X",
                 "valor_compra": 150000.00,
                 "consumo_mj_km": "0.65",
                 "potencia_cv": 204,
@@ -37,6 +39,7 @@ class CarroEletricoViewSchema(BaseModel):
     """
     id: int
     id_fabricante: int
+    modelo: str
     valor_compra: float
     consumo_mj_km: Decimal
     potencia_cv: int
@@ -44,7 +47,7 @@ class CarroEletricoViewSchema(BaseModel):
     capacidade_bat_kwh: float
     porta_malas_litros: int
     necessario_infra: bool
-    
+    thumbnail: Optional[str] = None
     # Habilita o Pydantic a ler o objeto do SQLAlchemy diretamente (ex: CarroEletricoViewSchema.model_validate(carro_objeto))
     class Config:
         from_attributes = True 
@@ -64,6 +67,7 @@ def apresenta_carros(carros: List[CarroEletrico]):
         result.append({
             "id": carro.id,
             "id_fabricante": carro.id_fabricante,
+            "modelo": carro.modelo,
             "valor_compra": carro.valor_compra,
             "consumo_mj_km": carro.consumo_mj_km,
             "potencia_cv": carro.potencia_cv,
@@ -71,6 +75,7 @@ def apresenta_carros(carros: List[CarroEletrico]):
             "capacidade_bat_kwh": carro.capacidade_bat_kwh,
             "porta_malas_litros": carro.porta_malas_litros,
             "necessario_infra": carro.necessario_infra,
+            "thumbnail": carro.thumbnail,
         })
 
     return {"carros": result}
