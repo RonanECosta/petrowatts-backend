@@ -1,3 +1,4 @@
+import base64
 from flask import jsonify
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
@@ -23,18 +24,26 @@ def get_todos_veiculos_eletricos():
         
         lista_veiculos = []
         for c in carros:
+            thumbnail_base64 = None
+            if c.thumbnail is not None:
+                if isinstance(c.thumbnail, bytes):
+                    thumbnail_base64 = base64.b64encode(c.thumbnail).decode('utf-8')
+                else:
+                    thumbnail_base64 = str(c.thumbnail)
+                    
             lista_veiculos.append({
                 "id": c.id,
                 "id_fabricante": c.fabricante_ref.id if c.fabricante_ref else None,
                 "modelo": c.modelo,
-                "valor_compra": c.fabricante_ref.fabricante if c.fabricante_ref else "Desconhecido",
+                "fabricante": c.fabricante_ref.fabricante if c.fabricante_ref else "Desconhecido",
+                "valor_compra": c.valor_compra,
                 "consumo_mj_km": c.consumo_mj_km,
                 "potencia_cv": c.potencia_cv,
                 "autonomia_km": c.autonomia_km,
                 "capacidade_bat_kwh": c.capacidade_bat_kwh,
                 "porta_malas_litros": c.porta_malas_litros,
                 "necessario_infra": c.necessario_infra,
-                "thumbnail": c.thumbnail
+                "thumbnail": thumbnail_base64
             })
             
         return jsonify({"veiculos": lista_veiculos}), 200
