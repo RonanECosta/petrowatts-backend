@@ -42,6 +42,7 @@ class ModeloQueryByIdFabricanteSchema(BaseModel):
     id_fabricante: int
 
 class ModeloViewSchema(BaseModel):
+    id: int
     modelo: str
 
 class ListagemModelosSchema(BaseModel):

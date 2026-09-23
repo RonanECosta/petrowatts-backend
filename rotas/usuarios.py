@@ -108,7 +108,9 @@ def get_usuario_veiculo(query: UsuarioCarroQuerySchema):
                 "fabricante": carro.fabricante_ref.fabricante if carro.fabricante_ref else "Desconhecido",
                 "modelo": carro.modelo,
                 "ano": carro.ano,
-                "km_mensal": vinculo.km_mensal
+                "km_mensal": vinculo.km_mensal,
+                "valor_revenda": carro.valor_revenda,
+                "consumo": carro.consumo
             }
         }, 200
 

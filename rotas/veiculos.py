@@ -51,11 +51,11 @@ def get_modelos(query: ModeloQueryByIdFabricanteSchema):
         
     session = Session()
     try:
-        modelos = session.query(CarroCombustao.modelo)\
+        modelos = session.query(CarroCombustao.id, CarroCombustao.modelo)\
                          .filter(CarroCombustao.id_fabricante == id_fabricante)\
                          .distinct()\
                          .order_by(CarroCombustao.modelo).all()
-        resultado = [{"modelo": m[0]} for m in modelos]
+        resultado = [{"id": m[0], "modelo": m[1]} for m in modelos]
         return jsonify(resultado), 200
     except Exception as e:
         logger.error(f"Erro ao buscar modelos: {e}")
