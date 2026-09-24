@@ -1,8 +1,9 @@
 services:
-  db:
+  petrowatts-db:
     build: ./banco-dados
     container_name: petrowatts-db
     restart: unless-stopped
+    command: --ssl=off
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: petrowatts_db
@@ -25,9 +26,8 @@ services:
     ports:
       - "5000:5000"
     environment:
-      # String de conexão configurada para o MySQL do container 'db'
-      - DATABASE_URL=mysql+pymysql://petrowatts_user:petrowatts_password@db:3306/petrowatts_db
+      - DATABASE_URL=mysql+pymysql://petrowatts_user:petrowatts_password@petrowatts-db:3306/petrowatts_db?charset=utf8mb4
     depends_on:
-      db:
+      petrowatts-db:
         condition: service_healthy  # A API só inicia após o MySQL passar no healthcheck
     restart: unless-stopped

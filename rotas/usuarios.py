@@ -52,7 +52,7 @@ def add_usuario_veiculo(form: CadastroUsuarioCarroFormSchema):
         vinculo = UsuarioCarro(
             id_usuario=novo_usuario.id,
             id_carro_combustao=carro.id,
-            km_mensal = km_mensal # O Pydantic já garante que chega como inteiro
+            km_mensal = km_mensal
         )
         session.add(vinculo)
         session.commit()

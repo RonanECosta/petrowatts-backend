@@ -11,26 +11,11 @@ VALUES (1, 'BYD'),
 -- Cadastrando apenas os nomes genéricos dos acessórios na tabela base
 INSERT INTO
     acessorios (id, nome)
-VALUES (
-        1,
-        'Central Multimídia (Polegadas)'
-    ),
-    (
-        2,
-        'Pontos de Fixação ISOFIX (Quantidade)'
-    ),
-    (
-        3,
-        'Airbags de Cabine (Quantidade)'
-    ),
-    (
-        4,
-        'Teto Solar Panorâmico (Área em m2)'
-    ),
-    (
-        5,
-        'Câmeras de Estacionamento (Quantidade de Lentes)'
-    );
+VALUES (1,'Central Multimidia (Pol.)'),
+    (2, 'Pontos ISOFIX (Qtd)'),
+    (3, 'Airbags de Cabine (Qtd)'),
+    (4, 'Teto Solar (m2)'),
+    (5, 'Cameras de Estacionamento (Qtd Lentes)');
 
 -- 3. CARGA DA TABELA: carros_eletricos
 -- Modelos 100% elétricos reais vendidos no Brasil por menos de R$ 200.000

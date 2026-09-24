@@ -2,11 +2,9 @@ import base64
 from flask import jsonify
 from flask_openapi3.blueprint import APIBlueprint
 from flask_openapi3.models.tag import Tag
-from sqlalchemy import exists
-from model import CarroEletrico, Fabricante, Session
-from schemas.carro_combustao import (
-    AnosQuerySchema, ListagemAnosSchema, ListagemModelosSchema, 
-    ModeloQueryByIdFabricanteSchema
+from model import CarroEletrico, Session, Acessorio, AcessorioCarroEletrico
+from schemas.carro_eletrico import (
+    VeiculoEletricoAcessoriosQuerySchema, CarroEletricoAcessoriosViewSchema
 )
 from schemas import ErrorSchema
 from logger import logger
@@ -50,6 +48,37 @@ def get_todos_veiculos_eletricos():
         
     except Exception as e:
         logger.error(f"Erro ao listar veículos elétricos: {e}")
+        return jsonify({"message": "Erro ao coletar dados do banco"}), 500
+    finally:
+        session.close()
+
+@bp_veiculo_ev.get('/veiculo-eletrico-acessorios', tags=[veiculo_eletrico_tag], responses={"200": CarroEletricoAcessoriosViewSchema, "404": ErrorSchema, "500": ErrorSchema})
+def get_veiculo_eletrico_acessorios(query: VeiculoEletricoAcessoriosQuerySchema):
+    """Busca todos os acessórios de um veículo elétrico."""
+    logger.debug(f"Coletando acessórios do veículo elétrico ID: {query.id_veiculo}")
+    session = Session()
+    try:
+        # Consulta realizando os JOINs adequados através da tabela associativa (acessorio_carro_eletrico)
+        resultados = session.query(Acessorio, AcessorioCarroEletrico)\
+            .join(AcessorioCarroEletrico, Acessorio.id == AcessorioCarroEletrico.id_acessorio)\
+            .join(CarroEletrico, CarroEletrico.id == AcessorioCarroEletrico.id_carro_eletrico)\
+            .filter(CarroEletrico.id == query.id_veiculo)\
+            .all()
+        
+        lista_acessorios = []
+        for acessorio, ac_pivot in resultados:
+            lista_acessorios.append({
+                "id": acessorio.id,
+                "id_veiculo": query.id_veiculo,
+                "nome": acessorio.nome,
+                # 'valor_tamanho' é a métrica armazenada na tabela pivot (ex: 10.25 para polegadas, 6 para airbags)
+                "valor_tamanho": float(ac_pivot.valor_tamanho)
+            })
+            
+        return jsonify({"acessorios": lista_acessorios}), 200
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar acessórios do veículo elétrico: {e}")
         return jsonify({"message": "Erro ao coletar dados do banco"}), 500
     finally:
         session.close()

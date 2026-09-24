@@ -79,3 +79,22 @@ def apresenta_carros(carros: List[CarroEletrico]):
         })
 
     return {"carros": result}
+
+class CarroEletricoAcessoriosViewSchema(BaseModel):
+    """ Define como os dados de um acessório de carro elétrico serão retornados pela API.
+    """
+    id: int
+    id_veiculo: int
+    nome: str
+    descricao: str
+
+    class Config:
+        from_attributes = True
+
+class VeiculoEletricoAcessoriosQuerySchema(BaseModel):
+    """ Define como será feita a consulta de acessórios de um veículo elétrico.
+    """
+    id_veiculo: int
+
+    class Config:
+        from_attributes = True
