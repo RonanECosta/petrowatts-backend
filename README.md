@@ -42,9 +42,34 @@ Para o correto funcionamento das funcionalidades acima, serão necessário o man
 * **Backend:** Python e MySQL 8.0 (em container próprio e populado via scripts de carga inicial na pasta initdb/)
 * **Documentação:** Swagger para documentar as APIs
 
-### Diagrama BD
+#### Schema do Banco de Dados
 
-* <https://www.drawdb.app/editor?shareId=78117b3e80c9cd07b123d5c4a1aba217>
+* [Diagrama (Mermaid)](banco-dados/petrowatts-diagrama-bd.md)
+
+#### Schema do projeto
+
+```mermaid
+graph TD
+    subgraph Cliente ["Navegador Web"]
+        FE["Front-end<br>(HTML / CSS / JS)"]
+    end
+
+    subgraph DockerEnv ["Ambiente Docker Compose"]
+        BE["Back-end API<br>(Python / Flask)"]
+        DB[("Banco de Dados<br>(MySQL 8.0)")]
+    end
+
+    subgraph ServicosExternos ["Internet - APIs públicas"]
+        API1["API Mockaroo<br>(Tarifa KWh x UF)"]
+        API2["API Combustível<br>(Preço Combustível x UF)"]
+    end
+
+    %% Fluxos de Comunicação
+    FE <-->|HTTP / REST| BE
+    BE <-->|PyMySQL / SQLAlchemy| DB
+    FE <-->|Requests HTTP| API1
+    FE <-->|Requests HTTP| API2
+```
 
 ## Execução da Aplicação (Docker)
 

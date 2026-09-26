@@ -1,8 +1,8 @@
-# petrowwats-diagrama-bd documentation
+# Estrutura do Banco de dados
 
 ## Summary
 
-- [petrowwats-diagrama-bd documentation](#petrowwats-diagrama-bd-documentation)
+- [Estrutura do Banco de dados](#estrutura-do-banco-de-dados)
   - [Summary](#summary)
   - [Introdução](#introdução)
   - [Estrutura de tabelas](#estrutura-de-tabelas)
