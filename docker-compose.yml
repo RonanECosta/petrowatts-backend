@@ -1,4 +1,12 @@
 services:
+
+  petrowatts-frontend:
+    build: ../petrowatts-frontend
+    container_name: petrowatts-frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
   petrowatts-db:
     build: ./banco-dados
     container_name: petrowatts-db
