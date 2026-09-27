@@ -46,30 +46,9 @@ Para o correto funcionamento das funcionalidades acima, serão necessário o man
 
 * [Diagrama (Mermaid)](banco-dados/petrowatts-diagrama-bd.md)
 
-#### Schema do projeto
+#### Arquitetura do projeto
 
-```mermaid
-graph TD
-    subgraph Cliente ["Navegador Web"]
-        FE["Front-end<br>(HTML / CSS / JS)"]
-    end
-
-    subgraph DockerEnv ["Ambiente Docker Compose"]
-        BE["Back-end API<br>(Python / Flask)"]
-        DB[("Banco de Dados<br>(MySQL 8.0)")]
-    end
-
-    subgraph ServicosExternos ["Internet - APIs públicas"]
-        API1["API Mockaroo<br>(Tarifa KWh x UF)"]
-        API2["API Combustível<br>(Preço Combustível x UF)"]
-    end
-
-    %% Fluxos de Comunicação
-    FE <-->|HTTP / REST| BE
-    BE <-->|PyMySQL / SQLAlchemy| DB
-    FE <-->|Requests HTTP| API1
-    FE <-->|Requests HTTP| API2
-```
+![Texto Alternativo](arquitetura.drawio.svg)
 
 ## Execução da Aplicação (Docker)
 
