@@ -58,27 +58,28 @@ Toda a infraestrutura do projeto está containerizada via Docker Compose.
 
 Docker Desktop instalado e em execução.
 
-### Passos para subir a aplicação
+### Executar o projeto completo
 
-1. Clone o repositório e acesse a pasta raiz do projeto:
+1. Clone os repositórios referentes ao backend (`petrowatts`) e ao frontend (`petrowatts-frontend`), sendo de suma importância que a pasta raiz desses projetos estejam compartilhando o mesmo diretório da sua máquina, e estejam no mesmo nível diretorial
 
     ```cmd
-    git clone <URL_DO_REPOSITORIO>
-    cd petrowatts
+    git clone <URL_DO_REPOSITORIO_PETROWATTS>
+    git clone <URL_DO_REPOSITORIO_PETROWATTS_FRONTEND>
     ```
 
-2. Suba os containers do banco de dados MySQL e da API Python:
+2. Acesse o frontend (`petrowatts-frontend`) e suba os containers preparados via docker compose, são eles: banco de dados MySQL, o servidor web Nginx e do backend API Python:
 
     ```bash
-    docker compose up -d
+    cd petrowatts-frontend
+    docker compose up --build -d
     ```
 
-    Na primeira execução, o banco MySQL será criado e populado automaticamente com os dados de carga inicial.
+    *Nota: Na primeira execução, o banco MySQL será criado e populado automaticamente com os dados de carga inicial.*
 
 3. Acesse a aplicação:
 
-    API / Documentação Interativa (Swagger): <http://localhost:5000/openapi>
-    Aplicação Web: <http://localhost:5000>
+   * Backend API / Documentação Interativa (Swagger): <http://localhost:5000/openapi>
+   * Aplicação Web: <http://localhost:8080>
 
 4. Para parar os containers:
 
