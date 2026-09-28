@@ -3,7 +3,7 @@ from flask_openapi3.openapi import OpenAPI
 from flask_openapi3.models.info import Info
 from flask_openapi3.models.tag import Tag
 from flask_cors import CORS
-from rotas import bp_usuario, bp_veiculo, bp_veiculo_ev, bp_comparativo
+from rotas import bp_usuario, bp_veiculo, bp_veiculo_ev
 
 info = Info(title="Petrowatts - comparador veículos à combustão x elétricos", version="1.0.0")
 app = OpenAPI(__name__, info=info)
@@ -19,7 +19,6 @@ comparativo_tag = Tag(name="Comparativo", description="Rotas de comparativo de c
 app.register_api(bp_usuario)
 app.register_api(bp_veiculo)
 app.register_api(bp_veiculo_ev)
-app.register_api(bp_comparativo)
 
 @app.get('/', tags=[home_tag])
 def home():
